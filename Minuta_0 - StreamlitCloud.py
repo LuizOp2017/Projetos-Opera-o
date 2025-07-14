@@ -5,11 +5,15 @@ import datetime as dt
 st.set_page_config(page_title="Modelo de Ocorrência")
 
 @st.cache_data
-def load_data(local_data):
-    return pd.read_excel(local_data)
+def load_data_from_gsheets(spreadsheet_url):
+    spreadsheet_id = spreadsheet_url.split("/d/")[1].split("/")[0]
+    url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/gviz/tq?tqx=out:csv&tqs=0"
+    df = pd.read_csv(url)
+    return df
 
-local_data = r'Listagem de equipamentos.xlsx'
-dados = load_data(local_data)
+# Substitua a URL da sua planilha publicada aqui
+gsheets_url = "https://docs.google.com/spreadsheets/d/1lUzy2PInVjaL2k7U5R4Wofc-9mvID-EF/edit?usp=sharing&ouid=111800672169498816048&rtpof=true&sd=true"
+dados = load_data_from_gsheets(gsheets_url)
 
 # Colunas do DataFrame
 required_columns = ['UFV','família do equipamento','SE','equipamento']
