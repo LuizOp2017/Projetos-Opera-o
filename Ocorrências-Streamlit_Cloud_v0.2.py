@@ -11,7 +11,7 @@ def load_data_from_gsheets(spreadsheet_url):
     df = pd.read_csv(url)
     return df
 
-gsheets_url = "SUA_URL_AQUI" # Substitua pela sua URL
+gsheets_url = "https://docs.google.com/spreadsheets/d/1lUzy2PInVjaL2k7U5R4Wofc-9mvID-EF/edit?usp=sharing&ouid=111800672169498816048&rtpof=true&sd=true"
 dados_equipamentos = load_data_from_gsheets(gsheets_url)
 
 required_columns = ['UFV','família do equipamento','SE','equipamento']
