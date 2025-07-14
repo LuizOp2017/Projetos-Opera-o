@@ -11,11 +11,11 @@ def load_data_from_gsheets(spreadsheet_url):
     df = pd.read_csv(url)
     return df
 
-gsheets_url = "https://docs.google.com/spreadsheets/d/1lUzy2PInVjaL2k7U5R4Wofc-9mvID-EF/edit?usp=sharing&ouid=111800672169498816048&rtpof=true&sd=true"
-dados = load_data_from_gsheets(gsheets_url)
+gsheets_url = "SUA_URL_AQUI" # Substitua pela sua URL
+dados_equipamentos = load_data_from_gsheets(gsheets_url)
 
 required_columns = ['UFV','família do equipamento','SE','equipamento']
-missing_columns = [col for col in required_columns if col not in dados.columns]
+missing_columns = [col for col in required_columns if col not in dados_equipamentos.columns]
 
 # Inicialização do st.session_state (manter como está)
 if 'date_ini' not in st.session_state:
@@ -90,25 +90,25 @@ if st.session_state['date_0'] and st.session_state['h_0'] and st.session_state['
 if missing_columns:
     st.error(f'Colunas faltando no arquivo Excel: {", ".join(missing_columns)}')
 else:
-    ufv_0 = dados['UFV'].unique()
-    st.session_state['ufv_sel'] = st.selectbox('Selecione a UFV: ', ufv_0, key='ufv_sel', index=None, value=st.session_state.get('ufv_sel', None))
+    ufv_0 = dados_equipamentos['UFV'].unique()
+    st.session_state['ufv_sel'] = st.selectbox('Selecione a UFV: ', ufv_0, key='ufv_sel', value=st.session_state.get('ufv_sel', None))
 
     fam_sel = None
     if st.session_state['ufv_sel']:
-        fam_0 = dados[dados['UFV'] == st.session_state['ufv_sel']]['família do equipamento'].unique()
-        st.session_state['fam_sel'] = st.selectbox('Selecione o tipo de equipamento: ', fam_0, key='fam_sel', index=None, value=st.session_state.get('fam_sel', None))
+        fam_0 = dados_equipamentos[dados_equipamentos['UFV'] == st.session_state['ufv_sel']]['família do equipamento'].unique()
+        st.session_state['fam_sel'] = st.selectbox('Selecione o tipo de equipamento: ', fam_0, key='fam_sel', value=st.session_state.get('fam_sel', None))
 
     se_sel = None
     if st.session_state['fam_sel']:
-        se_0 = dados[(dados['UFV'] == st.session_state['ufv_sel']) & (dados['família do equipamento'] == st.session_state['fam_sel'])]['SE'].unique()
-        st.session_state['se_sel'] = st.selectbox('Selecione parte da instalação: ', se_0, key='se_sel', index=None, value=st.session_state.get('se_sel', None))
+        se_0 = dados_equipamentos[(dados_equipamentos['UFV'] == st.session_state['ufv_sel']) & (dados_equipamentos['família do equipamento'] == st.session_state['fam_sel'])]['SE'].unique()
+        st.session_state['se_sel'] = st.selectbox('Selecione parte da instalação: ', se_0, key='se_sel', value=st.session_state.get('se_sel', None))
 
     equip_sel = None
     if st.session_state['se_sel']:
-        equip_0 = dados[(dados['UFV'] == st.session_state['ufv_sel']) &
-                        (dados['família do equipamento'] == st.session_state['fam_sel']) &
-                        (dados['SE'] == st.session_state['se_sel'])]['equipamento'].unique()
-        st.session_state['equip_sel'] = st.selectbox('Selecione o Equipamento: ', equip_0, key='equip_sel', index=None, value=st.session_state.get('equip_sel', None))
+        equip_0 = dados_equipamentos[(dados_equipamentos['UFV'] == st.session_state['ufv_sel']) &
+                        (dados_equipamentos['família do equipamento'] == st.session_state['fam_sel']) &
+                        (dados_equipamentos['SE'] == st.session_state['se_sel'])]['equipamento'].unique()
+        st.session_state['equip_sel'] = st.selectbox('Selecione o Equipamento: ', equip_0, key='equip_sel', value=st.session_state.get('equip_sel', None))
 
     descr_ini_ocr = st.text_area('Descrição inicial da Ocorrência:', key='descr_ini_ocr', value=st.session_state['descr_ini_ocr'])
 
@@ -163,3 +163,14 @@ else:
 
 if st.button('Limpar', on_click=clear_form):
     st.warning("Campos limpos!")
+
+# Seção para exibir os dados registrados
+st.subheader("Ocorrências Registradas")
+
+conn = st.connection("gsheets", type=st.gsheets_connection.GSheetsConnection)
+ocorrencias_df = conn.read(sheet_name="Ocorrências", usecols=list(range(12))) # Lê todas as 12 colunas
+
+if ocorrencias_df is not None and not ocorrencias_df.empty:
+    st.dataframe(ocorrencias_df)
+else:
+    st.info("Nenhuma ocorrência registrada ainda.")
