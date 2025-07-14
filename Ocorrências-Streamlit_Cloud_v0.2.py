@@ -11,7 +11,7 @@ def load_data_from_gsheets(spreadsheet_url):
     df = pd.read_csv(url)
     return df
 
-gsheets_url = "https://docs.google.com/spreadsheets/d/1lUzy2PInVjaL2k7U5R4Wofc-9mvID-EF/edit?usp=sharing&ouid=111800672169498816048&rtpof=true&sd=true" # Substitua pela sua URL
+gsheets_url = "https://docs.google.com/spreadsheets/d/1lUzy2PInVjaL2k7U5R4Wofc-9mvID-EF/edit?usp=sharing&ouid=111800672169498816048&rtpof=true&sd=true"
 dados = load_data_from_gsheets(gsheets_url)
 
 required_columns = ['UFV','família do equipamento','SE','equipamento']
@@ -91,24 +91,24 @@ if missing_columns:
     st.error(f'Colunas faltando no arquivo Excel: {", ".join(missing_columns)}')
 else:
     ufv_0 = dados['UFV'].unique()
-    ufv_sel = st.selectbox('Selecione a UFV: ', ufv_0, index=None, key='ufv_sel', index=ufv_0.tolist().index(st.session_state['ufv_sel']) if st.session_state['ufv_sel'] in ufv_0 else None)
+    st.session_state['ufv_sel'] = st.selectbox('Selecione a UFV: ', ufv_0, key='ufv_sel', index=None, value=st.session_state.get('ufv_sel', None))
 
     fam_sel = None
     if st.session_state['ufv_sel']:
         fam_0 = dados[dados['UFV'] == st.session_state['ufv_sel']]['família do equipamento'].unique()
-        fam_sel = st.selectbox('Selecione o tipo de equipamento: ', fam_0, index=None, key='fam_sel', index=fam_0.tolist().index(st.session_state['fam_sel']) if st.session_state['fam_sel'] in fam_0 else None)
+        st.session_state['fam_sel'] = st.selectbox('Selecione o tipo de equipamento: ', fam_0, key='fam_sel', index=None, value=st.session_state.get('fam_sel', None))
 
     se_sel = None
     if st.session_state['fam_sel']:
         se_0 = dados[(dados['UFV'] == st.session_state['ufv_sel']) & (dados['família do equipamento'] == st.session_state['fam_sel'])]['SE'].unique()
-        se_sel = st.selectbox('Selecione parte da instalação: ', se_0, index=None, key='se_sel', index=se_0.tolist().index(st.session_state['se_sel']) if st.session_state['se_sel'] in se_0 else None)
+        st.session_state['se_sel'] = st.selectbox('Selecione parte da instalação: ', se_0, key='se_sel', index=None, value=st.session_state.get('se_sel', None))
 
     equip_sel = None
     if st.session_state['se_sel']:
         equip_0 = dados[(dados['UFV'] == st.session_state['ufv_sel']) &
                         (dados['família do equipamento'] == st.session_state['fam_sel']) &
                         (dados['SE'] == st.session_state['se_sel'])]['equipamento'].unique()
-        equip_sel = st.selectbox('Selecione o Equipamento: ', equip_0, index=None, key='equip_sel', index=equip_0.tolist().index(st.session_state['equip_sel']) if st.session_state['equip_sel'] in equip_0 else None)
+        st.session_state['equip_sel'] = st.selectbox('Selecione o Equipamento: ', equip_0, key='equip_sel', index=None, value=st.session_state.get('equip_sel', None))
 
     descr_ini_ocr = st.text_area('Descrição inicial da Ocorrência:', key='descr_ini_ocr', value=st.session_state['descr_ini_ocr'])
 
@@ -126,10 +126,8 @@ else:
         data_ini_formatada = st.session_state['date_ini'].strftime('%d/%m/%Y')
         data_fin_formatada = date_fin if date_fin == '-' else date_fin.strftime('%d/%m/%Y')
 
-        # Conectando ao Google Sheets usando st.connection
         conn = st.connection("gsheets", type=st.gsheets_connection.GSheetsConnection)
 
-        # Criando um DataFrame com os dados da ocorrência
         ocorrencia_data = pd.DataFrame([{
             "Data de Início": data_ini_formatada,
             "Hora de Início": st.session_state['h_ini'].strftime('%H:%M') if st.session_state['h_ini'] else '',
@@ -145,18 +143,16 @@ else:
             "Observações": st.session_state['obs_ocr']
         }])
 
-        # Nome da aba onde você quer salvar os dados (crie essa aba se não existir)
         nome_aba_ocorrencias = "Ocorrências"
 
         try:
-            # Usando a conexão para adicionar os dados à planilha
             conn.add_rows(sheet_name=nome_aba_ocorrencias, data=ocorrencia_data)
             st.success("Ocorrência gravada com sucesso na planilha!")
-            clear_form() # Limpa o formulário após a gravação
+            clear_form()
         except Exception as e:
             st.error(f"Ocorreu um erro ao gravar a ocorrência: {e}")
 
-        txt_ocr = ( # Manter a exibição do resumo
+        txt_ocr = (
             f"'- Data/hora de início: {data_ini_formatada} - {st.session_state['h_ini']}.\n"
             f'- Data/hora de término: {data_fin_formatada} - {h_fin}.\n'
             f'- Equipamento: {st.session_state['se_sel']} - {st.session_state['equip_sel']}. - Proteção atuada: {st.session_state['prot_up']} - Bloqueio: {"Sim" if st.session_state['bloq_chk'] else "Não"}\n'
