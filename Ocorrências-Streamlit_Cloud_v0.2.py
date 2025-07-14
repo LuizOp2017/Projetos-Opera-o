@@ -18,8 +18,6 @@ required_columns = ['UFV','família do equipamento','SE','equipamento']
 missing_columns = [col for col in required_columns if col not in dados_equipamentos.columns]
 
 # Inicialização do st.session_state (manter como está)
-if 'date_ini' not in st.session_state:
-    st.session_state['date_ini'] = dt.datetime.today()
 if 'h_ini' not in st.session_state:
     st.session_state['h_ini'] = None
 if 'date_0' not in st.session_state:
@@ -62,7 +60,7 @@ col1, col2 = st.columns(2, gap='large', vertical_alignment='center', border=1)
 interv_time = dt.timedelta(minutes=1)
 
 with col1:
-    date_ini = st.date_input('Data inicial da ocorrência:', format='DD/MM/YYYY', key='date_ini', value=st.session_state['date_ini'])
+    date_ini = st.date_input('Data inicial da ocorrência:', format='DD/MM/YYYY', key='date_ini')
     h_ini = st.time_input('Hora inicial:', value=st.session_state['h_ini'], step=interv_time, key='h_ini')
 
 with col2:
@@ -91,24 +89,42 @@ if missing_columns:
     st.error(f'Colunas faltando no arquivo Excel: {", ".join(missing_columns)}')
 else:
     ufv_0 = dados_equipamentos['UFV'].unique()
-    st.session_state['ufv_sel'] = st.selectbox('Selecione a UFV: ', ufv_0, key='ufv_sel', value=st.session_state.get('ufv_sel', None))
+    try:
+        default_ufv = st.session_state['ufv_sel']
+    except KeyError:
+        default_ufv = None
+    st.session_state['ufv_sel'] = st.selectbox('Selecione a UFV: ', ufv_0, key='ufv_sel', value=default_ufv)
 
     fam_sel = None
     if st.session_state['ufv_sel']:
         fam_0 = dados_equipamentos[dados_equipamentos['UFV'] == st.session_state['ufv_sel']]['família do equipamento'].unique()
-        st.session_state['fam_sel'] = st.selectbox('Selecione o tipo de equipamento: ', fam_0, key='fam_sel', value=st.session_state.get('fam_sel', None))
+        try:
+            default_fam = st.session_state['fam_sel']
+        except KeyError:
+            default_fam = None
+        st.session_state['fam_sel'] = st.selectbox('Selecione o tipo de equipamento: ', fam_0, key='fam_sel', value=default_fam)
 
     se_sel = None
     if st.session_state['fam_sel']:
         se_0 = dados_equipamentos[(dados_equipamentos['UFV'] == st.session_state['ufv_sel']) & (dados_equipamentos['família do equipamento'] == st.session_state['fam_sel'])]['SE'].unique()
-        st.session_state['se_sel'] = st.selectbox('Selecione parte da instalação: ', se_0, key='se_sel', value=st.session_state.get('se_sel', None))
+        try:
+            default_se = st.session_state['se_sel']
+        except KeyError:
+            default_se = None
+        st.session_state['se_sel'] = st.selectbox('Selecione parte da instalação: ', se_0, key='se_sel', value=default_se)
 
     equip_sel = None
     if st.session_state['se_sel']:
         equip_0 = dados_equipamentos[(dados_equipamentos['UFV'] == st.session_state['ufv_sel']) &
                         (dados_equipamentos['família do equipamento'] == st.session_state['fam_sel']) &
                         (dados_equipamentos['SE'] == st.session_state['se_sel'])]['equipamento'].unique()
-        st.session_state['equip_sel'] = st.selectbox('Selecione o Equipamento: ', equip_0, key='equip_sel', value=st.session_state.get('equip_sel', None))
+        try:
+            default_equip = st.session_state['equip_sel']
+        except KeyError:
+            default_equip = None
+        st.session_state['equip_sel'] = st.selectbox('Selecione o Equipamento: ', equip_0, key='equip_sel', value=default_equip)
+
+    # O restante do seu código permanece igual
 
     descr_ini_ocr = st.text_area('Descrição inicial da Ocorrência:', key='descr_ini_ocr', value=st.session_state['descr_ini_ocr'])
 
