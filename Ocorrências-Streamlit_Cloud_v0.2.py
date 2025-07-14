@@ -1,17 +1,19 @@
+# --- Bloco Corrigido ---
+
 import pandas as pd
 import streamlit as st
 import datetime as dt
+from st_gsheets_connection import GSheetsConnection # 1. IMPORTAR A CLASSE
 
 # --- Configuração Inicial e Conexão ---
 
 st.set_page_config(page_title="Modelo de Ocorrência")
 
-
 # Estabelece a conexão com o Google Sheets uma única vez
 @st.cache_resource
 def get_gsheets_connection():
-    return st.connection("gsheets", type="gsheets")
-
+    # 2. USAR A CLASSE AQUI
+    return st.connection("gsheets", type=GSheetsConnection)
 
 conn = get_gsheets_connection()
 
